@@ -15,6 +15,9 @@ const getAllUsers = async (req, res) => {
 const createUser = async (req, res) => {
   try {
     const { name, email } = req.body;
+    if (!name || !email) {
+      return res.status(400).json({ message: 'Name and email are required' });
+    }
     const user = await UserModel.create({ name, email });
     res.json(user);
   } catch (error) {
@@ -23,10 +26,30 @@ const createUser = async (req, res) => {
   }
 };
 
+const getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user = await UserModel.findByPk(id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    res.json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, email } = req.body;
+    if (!name || !email) {
+      return res.status(400).json({ message: 'Name and email are required' });
+    }
+    if (!id) {
+      return res.status(400).json({ message: 'ID is required' });
+    }
     const user = await UserModel.findByPk(id);
     if (user) {
       user.name = name;
@@ -62,6 +85,7 @@ const deleteUser = async (req, res) => {
 module.exports = {
   getAllUsers,
   createUser,
+  getUserById,
   updateUser,
   deleteUser,
 };

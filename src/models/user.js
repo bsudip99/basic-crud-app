@@ -1,7 +1,8 @@
+// models/user.js
+
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
-// Define the User model
 const User = sequelize.define('User', {
   name: {
     type: DataTypes.STRING,
@@ -11,8 +12,10 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
+    validate: {
+      isEmail: true,
+    },
   },
 });
-
 
 module.exports = User;

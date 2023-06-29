@@ -1,5 +1,7 @@
 'use strict';
 
+const { query } = require('express');
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up (queryInterface, Sequelize) {
@@ -12,6 +14,14 @@ module.exports = {
      *   isBetaMember: false
      * }], {});
     */
+    await queryInterface.bulkInsert('Users',
+    [
+      {
+        name: 'Test',
+        email: 'test@yopmail.com',
+        password: 'p@ssword'
+      }
+    ])
   },
 
   async down (queryInterface, Sequelize) {
@@ -21,5 +31,6 @@ module.exports = {
      * Example:
      * await queryInterface.bulkDelete('People', null, {});
      */
+    await queryInterface.bulkDelete('Users',null,{});
   }
 };

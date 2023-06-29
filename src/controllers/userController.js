@@ -1,5 +1,7 @@
 
+const { Op } = require('sequelize');
 const UserModel = require('../models/user');
+const userValidator = require('../validators/userValidator');
 
 // Define the routes
 const getAllUsers = async (req, res) => {
@@ -14,11 +16,20 @@ const getAllUsers = async (req, res) => {
 
 const createUser = async (req, res) => {
   try {
-    const { name, email } = req.body;
-    if (!name || !email) {
-      return res.status(400).json({ message: 'Name and email are required' });
+    const { error, value } = userValidator.createUserSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
     }
-    const user = await UserModel.create({ name, email });
+    const { name, email, password } = req.body;
+
+    const existingUser = await UserModel.findOne({ email: email });
+
+    if (existingUser) {
+      // User with the provided email already exists
+      return res.status(400).json({ error: 'Email is already in use' });
+    }
+
+    const user = await UserModel.create({ name, email, password });
     res.json(user);
   } catch (error) {
     console.error(error);
@@ -42,18 +53,32 @@ const getUserById = async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
+    const { error, value } = userValidator.updateUserSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
     const { id } = req.params;
-    const { name, email } = req.body;
-    if (!name || !email) {
-      return res.status(400).json({ message: 'Name and email are required' });
-    }
-    if (!id) {
-      return res.status(400).json({ message: 'ID is required' });
-    }
+    const { name, email, password } = req.body;
     const user = await UserModel.findByPk(id);
     if (user) {
+      const existingUser = await UserModel.findOne(
+        {
+          where:
+          {
+            email: email,
+            id: {
+              [Op.ne]: id
+            }
+          },
+        }
+      );
+      if (existingUser) {
+        // User with the provided email already exists
+        return res.status(400).json({ error: 'Email is already in use' });
+      }
       user.name = name;
       user.email = email;
+      user.password = password;
       await user.save();
       res.json(user);
     } else {
